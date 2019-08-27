@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
@@ -80,7 +81,14 @@ class TapeView :View{
 
     constructor(context:Context):this(context,null)
     constructor(context: Context,attrs:AttributeSet?):super(context,attrs){
-        //TODO 引入自定义属性
+
+        context.obtainStyledAttributes(attrs,R.styleable.TapeView).apply {
+            minValue = getInteger(R.styleable.TapeView_minValue,minValue)
+            currentValue = getFloat(R.styleable.TapeView_currentValue,currentValue)
+            maxValue = getInteger(R.styleable.TapeView_maxValue,maxValue)
+
+            recycle()
+        }
 
         scroller = Scroller(context)
     }
@@ -125,17 +133,20 @@ class TapeView :View{
             velocityTracker.addMovement(event)
             when(it.action){
                 MotionEvent.ACTION_DOWN ->{
+                    lastX = it.x
                     scroller.forceFinished(true)
                 }
                 MotionEvent.ACTION_MOVE ->{
                     validateScroll(it.x - lastX )
+                    lastX = it.x
                 }
                 MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL ->{
                     scrollToTickMark()
                     parseFling()
+                    lastX = 0f
                 }
             }
-            lastX = it.x
+
         }
 
 
@@ -144,21 +155,19 @@ class TapeView :View{
 
     override fun computeScroll() {
         super.computeScroll()
+        
         if (scroller.computeScrollOffset()){
-            val currX= scroller.currX
-            when(currX) {
-                scroller.startX ->{
-                    postInvalidate()
-                }
+
+            when( val currX= scroller.currX) {
                 scroller.finalX -> {
                     scrollToTickMark()
                 }
                 else ->{
-
                     validateScroll(currX - lastX )
+                    lastX = currX.toFloat()
                 }
             }
-            lastX = currX.toFloat()
+
         }
     }
 
@@ -182,14 +191,16 @@ class TapeView :View{
     //检测滑动是否有效，有效的话，则直接重绘实现滑动效果
     private fun validateScroll(dx:Float){
         if (dx >0
-            && startOffset+dx > 0)
-            return //滑倒最左边
+            && startOffset+dx > 0){
+            startOffset = 0f  //滑倒最左边
+        }else if (dx <0
+            && startOffset+dx < maxOffset) {
+            startOffset = maxOffset  //滑到最右边
+        } else{
+            startOffset += dx
 
-        if (dx <0
-            && startOffset+dx < maxOffset)
-            return //滑到最右边
+        }
 
-        startOffset += dx
         postInvalidate()
 
         val count = ( (abs(startOffset) + gap/2) /gap ).toInt()

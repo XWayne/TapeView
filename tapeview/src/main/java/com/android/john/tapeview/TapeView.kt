@@ -112,6 +112,18 @@ class TapeView :View{
         listener = null
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+//        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        var heightSize = MeasureSpec.getSize(heightMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+
+        if (heightMode == MeasureSpec.AT_MOST){
+            heightSize = minOf( (tickMarkHeightLong + textSize + marginBottom + 2*gap).toInt(),heightSize)
+        }
+
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec),heightSize)
+    }
+
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 

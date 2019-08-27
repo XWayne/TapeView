@@ -21,7 +21,7 @@
     <com.android.john.tapeview.TapeView
             android:id="@+id/tapeView"
             android:layout_width="match_parent"
-            android:layout_height="80dp"
+            android:layout_height="wrap_content"
             app:minValue="3"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
